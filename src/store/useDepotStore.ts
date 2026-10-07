@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { supabase } from '@/lib/supabase';
 
 export type Transaction = {
   id: string;
   date: string;
   time: string;
-  channel: 'pickup' | 'delivery' | 'store'; // Added store for Titip Toko
+  channel: 'pickup' | 'delivery' | 'store';
   qty: number;
-  useStock?: boolean; // True if using filled stock, false if filling from Toren
-  customerId: string | null; // null if guest
+  useStock?: boolean;
+  customerId: string | null;
   customerName?: string;
   gallonStatus: 'tukar' | 'pinjam' | 'kembali' | 'baru';
   paymentMethod: 'cash' | 'qris' | 'bon';
@@ -39,13 +39,15 @@ export type Expense = {
 };
 
 interface DepotState {
-  // Settings
+  isLoaded: boolean;
+  initData: () => Promise<void>;
+
   settings: {
     pricePickup: number;
     priceDelivery: number;
-    priceStore: number; // Harga Khusus Titip Toko
-    storeCommission: number; // Komisi untuk toko (per galon)
-    totalGallonAsset: number; // Total galon keseluruhan milik depot
+    priceStore: number;
+    storeCommission: number;
+    totalGallonAsset: number;
     tankCapacity: number;
     tankPrice: number;
     investorPct: number;
@@ -56,45 +58,39 @@ interface DepotState {
     depotAddress: string;
     picName: string;
   };
-  updateSettings: (newSettings: Partial<DepotState['settings']>) => void;
+  updateSettings: (newSettings: Partial<DepotState['settings']>) => Promise<void>;
 
-  // Inventory & Warehouse
   inventory: {
     currentWaterLiters: number;
     emptyGallons: number;
     filledGallons: number;
   };
-  updateInventory: (liters: number) => void;
-  updateWarehouse: (emptyChange: number, filledChange: number) => void;
+  updateInventory: (liters: number) => Promise<void>;
+  updateWarehouse: (emptyChange: number, filledChange: number) => Promise<void>;
 
-  // Customers
   customers: Customer[];
-  addCustomer: (customer: Omit<Customer, 'id' | 'debtAmount' | 'borrowedGallons'>) => void;
-  updateCustomerDebt: (id: string, amountChange: number) => void;
-  updateCustomerGallons: (id: string, gallonChange: number) => void;
+  addCustomer: (customer: Omit<Customer, 'id' | 'debtAmount' | 'borrowedGallons'>) => Promise<void>;
+  updateCustomerDebt: (id: string, amountChange: number) => Promise<void>;
+  updateCustomerGallons: (id: string, gallonChange: number) => Promise<void>;
 
-  // Transactions
   transactions: Transaction[];
-  addTransaction: (tx: Omit<Transaction, 'id'>) => void;
-  revertTransaction: (id: string, revertQty: number) => void;
+  addTransaction: (tx: Omit<Transaction, 'id'>) => Promise<void>;
+  revertTransaction: (id: string, revertQty: number) => Promise<void>;
 
-  // Warehouse History
   warehouseHistories: { id: string, date: string, type: 'isi' | 'kosong', amountChange: number, description: string }[];
-  addWarehouseHistory: (history: { date: string, type: 'isi' | 'kosong', amountChange: number, description: string }) => void;
+  addWarehouseHistory: (history: { date: string, type: 'isi' | 'kosong', amountChange: number, description: string }) => Promise<void>;
 
-  // Tank History
   tankHistories: TankHistory[];
-  addTankHistory: (history: Omit<TankHistory, 'id'>) => void;
+  addTankHistory: (history: Omit<TankHistory, 'id'>) => Promise<void>;
 
-  // Expenses
   expenses: Expense[];
-  addExpense: (expense: Omit<Expense, 'id'>) => void;
+  addExpense: (expense: Omit<Expense, 'id'>) => Promise<void>;
 
-  // System
   resetData: () => void;
 }
 
 const initialState = {
+  isLoaded: false,
   settings: {
     pricePickup: 6000,
     priceDelivery: 7000,
@@ -116,232 +112,381 @@ const initialState = {
     emptyGallons: 50,
     filledGallons: 20,
   },
-  customers: [
-    { id: '1', name: 'Warung Barokah', phone: '08123456789', debtAmount: 0, borrowedGallons: 0 }
-  ],
+  customers: [],
   transactions: [],
   warehouseHistories: [],
   tankHistories: [],
   expenses: [],
 };
 
-export const useDepotStore = create<DepotState>()(
-  persist(
-    (set, get) => ({
-      ...initialState,
+export const useDepotStore = create<DepotState>()((set, get) => ({
+  ...initialState,
 
-      updateSettings: (newSettings) => 
-        set((state) => ({ settings: { ...state.settings, ...newSettings } })),
+  initData: async () => {
+    const [
+      { data: settings },
+      { data: inventory },
+      { data: customers },
+      { data: transactions },
+      { data: warehouseHistories },
+      { data: tankHistories },
+      { data: expenses }
+    ] = await Promise.all([
+      supabase.from('settings').select('*').single(),
+      supabase.from('inventory').select('*').single(),
+      supabase.from('customers').select('*').order('created_at', { ascending: false }),
+      supabase.from('transactions').select('*').order('created_at', { ascending: false }),
+      supabase.from('warehouse_histories').select('*').order('created_at', { ascending: false }),
+      supabase.from('tank_histories').select('*').order('created_at', { ascending: false }),
+      supabase.from('expenses').select('*').order('created_at', { ascending: false })
+    ]);
 
-      updateInventory: (liters) => 
-        set((state) => ({ inventory: { ...state.inventory, currentWaterLiters: liters } })),
+    set({
+      settings: settings ? {
+        pricePickup: settings.price_pickup,
+        priceDelivery: settings.price_delivery,
+        priceStore: settings.price_store,
+        storeCommission: settings.store_commission,
+        totalGallonAsset: settings.total_gallon_asset,
+        tankCapacity: settings.tank_capacity,
+        tankPrice: settings.tank_price,
+        investorPct: settings.investor_pct,
+        capPrice: settings.cap_price,
+        tissuePrice: settings.tissue_price,
+        sealPrice: settings.seal_price,
+        depotName: settings.depot_name,
+        depotAddress: settings.depot_address,
+        picName: settings.pic_name,
+      } : initialState.settings,
+      inventory: inventory ? {
+        currentWaterLiters: inventory.current_water_liters,
+        emptyGallons: inventory.empty_gallons,
+        filledGallons: inventory.filled_gallons,
+      } : initialState.inventory,
+      customers: (customers || []).map(c => ({
+        id: c.id, name: c.name, phone: c.phone, debtAmount: c.debt_amount, borrowedGallons: c.borrowed_gallons
+      })),
+      transactions: (transactions || []).map(t => ({
+        id: t.id, date: t.date, time: t.time, channel: t.channel, qty: t.qty, useStock: t.use_stock,
+        customerId: t.customer_id, customerName: t.customer_name, gallonStatus: t.gallon_status,
+        paymentMethod: t.payment_method, totalAmount: t.total_amount
+      })),
+      warehouseHistories: (warehouseHistories || []).map(w => ({
+        id: w.id, date: w.date, type: w.type, amountChange: w.amount_change, description: w.description
+      })),
+      tankHistories: (tankHistories || []).map(t => ({
+        id: t.id, date: t.date, litersAdded: t.liters_added, pricePaid: t.price_paid
+      })),
+      expenses: (expenses || []).map(e => ({
+        id: e.id, date: e.date, category: e.category, amount: e.amount, description: e.description
+      })),
+      isLoaded: true
+    });
+  },
 
-      updateWarehouse: (emptyChange, filledChange) =>
-        set((state) => ({
-          inventory: {
-            ...state.inventory,
-            emptyGallons: Math.max(0, state.inventory.emptyGallons + emptyChange),
-            filledGallons: Math.max(0, state.inventory.filledGallons + filledChange),
+  updateSettings: async (newSettings) => {
+    set((state) => ({ settings: { ...state.settings, ...newSettings } }));
+    const s = get().settings;
+    await supabase.from('settings').update({
+      price_pickup: s.pricePickup,
+      price_delivery: s.priceDelivery,
+      price_store: s.priceStore,
+      store_commission: s.storeCommission,
+      total_gallon_asset: s.totalGallonAsset,
+      tank_capacity: s.tankCapacity,
+      tank_price: s.tankPrice,
+      investor_pct: s.investorPct,
+      cap_price: s.capPrice,
+      tissue_price: s.tissuePrice,
+      seal_price: s.sealPrice,
+      depot_name: s.depotName,
+      depot_address: s.depotAddress,
+      pic_name: s.picName,
+    }).eq('id', 1);
+  },
+
+  updateInventory: async (liters) => {
+    set((state) => ({ inventory: { ...state.inventory, currentWaterLiters: liters } }));
+    await supabase.from('inventory').update({ current_water_liters: liters }).eq('id', 1);
+  },
+
+  updateWarehouse: async (emptyChange, filledChange) => {
+    set((state) => ({
+      inventory: {
+        ...state.inventory,
+        emptyGallons: Math.max(0, state.inventory.emptyGallons + emptyChange),
+        filledGallons: Math.max(0, state.inventory.filledGallons + filledChange),
+      }
+    }));
+    const inv = get().inventory;
+    await supabase.from('inventory').update({
+      empty_gallons: inv.emptyGallons,
+      filled_gallons: inv.filledGallons
+    }).eq('id', 1);
+  },
+
+  addCustomer: async (customer) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(7);
+    set((state) => ({
+      customers: [{ ...customer, id, debtAmount: 0, borrowedGallons: 0 }, ...state.customers]
+    }));
+    await supabase.from('customers').insert({
+      id, name: customer.name, phone: customer.phone, debt_amount: 0, borrowed_gallons: 0
+    });
+  },
+
+  updateCustomerDebt: async (id, amountChange) => {
+    set((state) => ({
+      customers: state.customers.map(c => c.id === id ? { ...c, debtAmount: c.debtAmount + amountChange } : c)
+    }));
+    const cust = get().customers.find(c => c.id === id);
+    if (cust) await supabase.from('customers').update({ debt_amount: cust.debtAmount }).eq('id', id);
+  },
+
+  updateCustomerGallons: async (id, gallonChange) => {
+    set((state) => ({
+      customers: state.customers.map(c => c.id === id ? { ...c, borrowedGallons: c.borrowedGallons + gallonChange } : c)
+    }));
+    const cust = get().customers.find(c => c.id === id);
+    if (cust) await supabase.from('customers').update({ borrowed_gallons: cust.borrowedGallons }).eq('id', id);
+  },
+
+  addTransaction: async (tx) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(7);
+    const newTx = { ...tx, id };
+    
+    set((state) => {
+      let newWaterLiters = state.inventory.currentWaterLiters;
+      let newEmptyGallons = state.inventory.emptyGallons;
+      let newFilledGallons = state.inventory.filledGallons;
+
+      if (tx.useStock) {
+        newFilledGallons = Math.max(0, newFilledGallons - tx.qty);
+        if (tx.gallonStatus === 'tukar' || tx.gallonStatus === 'kembali') {
+          newEmptyGallons += tx.qty;
+        }
+      } else {
+        const litersUsed = tx.qty * 19;
+        newWaterLiters = Math.max(0, newWaterLiters - litersUsed);
+        
+        if (tx.gallonStatus === 'pinjam' || tx.gallonStatus === 'baru') {
+          newEmptyGallons = Math.max(0, newEmptyGallons - tx.qty);
+        } else if (tx.gallonStatus === 'kembali') {
+          newWaterLiters += litersUsed;
+          newEmptyGallons += tx.qty;
+        }
+      }
+
+      let updatedCustomers = [...state.customers];
+      if (tx.customerId) {
+        updatedCustomers = updatedCustomers.map(c => {
+          if (c.id === tx.customerId) {
+            let debtChange = tx.paymentMethod === 'bon' ? tx.totalAmount : 0;
+            let gallonChange = 0;
+            if (tx.gallonStatus === 'pinjam') gallonChange = tx.qty;
+            if (tx.gallonStatus === 'kembali') gallonChange = -tx.qty;
+            return {
+              ...c,
+              debtAmount: c.debtAmount + debtChange,
+              borrowedGallons: c.borrowedGallons + gallonChange,
+            };
           }
-        })),
+          return c;
+        });
+      }
 
-      addCustomer: (customer) => 
-        set((state) => ({
-          customers: [
-            ...state.customers, 
-            { ...customer, id: Date.now().toString() + Math.random().toString(36).substring(7), debtAmount: 0, borrowedGallons: 0 }
-          ]
-        })),
+      return {
+        transactions: [newTx, ...state.transactions],
+        inventory: { currentWaterLiters: newWaterLiters, emptyGallons: newEmptyGallons, filledGallons: newFilledGallons },
+        customers: updatedCustomers,
+      };
+    });
 
-      updateCustomerDebt: (id, amountChange) =>
-        set((state) => ({
-          customers: state.customers.map(c => 
-            c.id === id ? { ...c, debtAmount: c.debtAmount + amountChange } : c
-          )
-        })),
+    // Sync to DB
+    const state = get();
+    await supabase.from('transactions').insert({
+      id: newTx.id, date: newTx.date, time: newTx.time, channel: newTx.channel, qty: newTx.qty,
+      use_stock: newTx.useStock, customer_id: newTx.customerId, customer_name: newTx.customerName,
+      gallon_status: newTx.gallonStatus, payment_method: newTx.paymentMethod, total_amount: newTx.totalAmount
+    });
+    
+    await supabase.from('inventory').update({
+      current_water_liters: state.inventory.currentWaterLiters,
+      empty_gallons: state.inventory.emptyGallons,
+      filled_gallons: state.inventory.filledGallons
+    }).eq('id', 1);
 
-      updateCustomerGallons: (id, gallonChange) =>
-        set((state) => ({
-          customers: state.customers.map(c => 
-            c.id === id ? { ...c, borrowedGallons: c.borrowedGallons + gallonChange } : c
-          )
-        })),
-
-      addTransaction: (tx) => 
-        set((state) => {
-          let newWaterLiters = state.inventory.currentWaterLiters;
-          let newEmptyGallons = state.inventory.emptyGallons;
-          let newFilledGallons = state.inventory.filledGallons;
-
-          if (tx.useStock) {
-            newFilledGallons = Math.max(0, newFilledGallons - tx.qty);
-            if (tx.gallonStatus === 'tukar' || tx.gallonStatus === 'kembali') {
-              newEmptyGallons += tx.qty;
-            }
-          } else {
-            const litersUsed = tx.qty * 19;
-            newWaterLiters = Math.max(0, newWaterLiters - litersUsed);
-            
-            if (tx.gallonStatus === 'pinjam' || tx.gallonStatus === 'baru') {
-              newEmptyGallons = Math.max(0, newEmptyGallons - tx.qty);
-            } else if (tx.gallonStatus === 'kembali') {
-              newWaterLiters += litersUsed; // Re-add water since 'kembali' doesn't use water
-              newEmptyGallons += tx.qty;
-            }
-            // If tukar, emptyGallons remains unchanged because they bring 1 and we use it immediately.
-          }
-
-          // Update customer if applicable (Debt and Gallons)
-          let updatedCustomers = [...state.customers];
-          if (tx.customerId) {
-            updatedCustomers = updatedCustomers.map(c => {
-              if (c.id === tx.customerId) {
-                let debtChange = tx.paymentMethod === 'bon' ? tx.totalAmount : 0;
-                let gallonChange = 0;
-                if (tx.gallonStatus === 'pinjam') gallonChange = tx.qty;
-                if (tx.gallonStatus === 'kembali') gallonChange = -tx.qty;
-                return {
-                  ...c,
-                  debtAmount: c.debtAmount + debtChange,
-                  borrowedGallons: c.borrowedGallons + gallonChange,
-                };
-              }
-              return c;
-            });
-          }
-
-          return {
-            transactions: [{ ...tx, id: Date.now().toString() + Math.random().toString(36).substring(7) }, ...state.transactions],
-            inventory: { 
-              ...state.inventory, 
-              currentWaterLiters: newWaterLiters,
-              emptyGallons: newEmptyGallons,
-              filledGallons: newFilledGallons
-            },
-            customers: updatedCustomers,
-          };
-        }),
-
-      revertTransaction: (id, revertQty) => 
-        set((state) => {
-          const tx = state.transactions.find(t => t.id === id);
-          if (!tx) return state;
-          
-          const actualRevertQty = Math.min(revertQty, tx.qty);
-          if (actualRevertQty <= 0) return state;
-
-          const unitPrice = tx.totalAmount / tx.qty;
-          const revertAmount = unitPrice * actualRevertQty;
-
-          const newTransactions = state.transactions.map(t => {
-            if (t.id === id) {
-              return { ...t, qty: t.qty - actualRevertQty, totalAmount: t.totalAmount - revertAmount };
-            }
-            return t;
-          });
-
-          // Restore water and stock inventory
-          let newWaterLiters = state.inventory.currentWaterLiters;
-          let newEmptyGallons = state.inventory.emptyGallons;
-          let newFilledGallons = state.inventory.filledGallons;
-
-          if (tx.useStock) {
-            newFilledGallons += actualRevertQty;
-            if (tx.gallonStatus === 'tukar' || tx.gallonStatus === 'kembali') {
-              newEmptyGallons = Math.max(0, newEmptyGallons - actualRevertQty);
-            }
-          } else {
-            const litersRestored = actualRevertQty * 19;
-            newWaterLiters += litersRestored;
-            
-            if (tx.gallonStatus === 'pinjam' || tx.gallonStatus === 'baru') {
-              newEmptyGallons += actualRevertQty;
-            } else if (tx.gallonStatus === 'kembali') {
-              newWaterLiters = Math.max(0, newWaterLiters - litersRestored);
-              newEmptyGallons = Math.max(0, newEmptyGallons - actualRevertQty);
-            }
-          }
-
-          // Restore customer debt/gallons if applicable
-          let updatedCustomers = [...state.customers];
-          if (tx.customerId) {
-            updatedCustomers = updatedCustomers.map(c => {
-              if (c.id === tx.customerId) {
-                let debtChange = tx.paymentMethod === 'bon' ? -revertAmount : 0;
-                let gallonChange = 0;
-                if (tx.gallonStatus === 'pinjam') gallonChange = -actualRevertQty;
-                if (tx.gallonStatus === 'kembali') gallonChange = actualRevertQty;
-                return {
-                  ...c,
-                  debtAmount: Math.max(0, c.debtAmount + debtChange),
-                  borrowedGallons: Math.max(0, c.borrowedGallons + gallonChange),
-                };
-              }
-              return c;
-            });
-          }
-
-          return {
-            transactions: newTransactions,
-            inventory: { 
-              ...state.inventory, 
-              currentWaterLiters: newWaterLiters,
-              emptyGallons: newEmptyGallons,
-              filledGallons: newFilledGallons
-            },
-            customers: updatedCustomers,
-          };
-        }),
-
-      addWarehouseHistory: (history) =>
-        set((state) => {
-          let emptyChange = 0;
-          let filledChange = 0;
-          let waterChange = 0;
-
-          if (history.type === 'kosong') {
-            emptyChange = history.amountChange;
-          } else if (history.type === 'isi') {
-            filledChange = history.amountChange;
-            // Jika penambahan galon isi (produksi), kurangi air toren dan kurangi galon kosong
-            if (history.amountChange > 0 && !history.description.toLowerCase().includes('opname')) {
-              waterChange = -(history.amountChange * 19);
-              emptyChange = -history.amountChange;
-            }
-          }
-          
-          return {
-            warehouseHistories: [{ ...history, id: Date.now().toString() + Math.random().toString(36).substring(7) }, ...state.warehouseHistories],
-            inventory: {
-              ...state.inventory,
-              currentWaterLiters: Math.max(0, state.inventory.currentWaterLiters + waterChange),
-              emptyGallons: Math.max(0, state.inventory.emptyGallons + emptyChange),
-              filledGallons: Math.max(0, state.inventory.filledGallons + filledChange),
-            }
-          };
-        }),
-
-      addTankHistory: (history) =>
-        set((state) => ({
-          tankHistories: [{ ...history, id: Date.now().toString() + Math.random().toString(36).substring(7) }, ...state.tankHistories],
-          inventory: {
-            ...state.inventory,
-            currentWaterLiters: Math.min(
-              state.settings.tankCapacity, 
-              state.inventory.currentWaterLiters + history.litersAdded
-            )
-          }
-        })),
-
-      addExpense: (expense) =>
-        set((state) => ({
-          expenses: [{ ...expense, id: Date.now().toString() + Math.random().toString(36).substring(7) }, ...state.expenses]
-        })),
-
-      resetData: () => set(initialState),
-    }),
-    {
-      name: 'depot-storage',
+    if (tx.customerId) {
+      const cust = state.customers.find(c => c.id === tx.customerId);
+      if (cust) await supabase.from('customers').update({ 
+        debt_amount: cust.debtAmount, borrowed_gallons: cust.borrowedGallons 
+      }).eq('id', cust.id);
     }
-  )
-);
+  },
+
+  revertTransaction: async (id, revertQty) => {
+    // Basic revert logic syncing
+    // ... we will re-use the local update then push
+    set((state) => {
+      const tx = state.transactions.find(t => t.id === id);
+      if (!tx) return state;
+      
+      const actualRevertQty = Math.min(revertQty, tx.qty);
+      if (actualRevertQty <= 0) return state;
+
+      const unitPrice = tx.totalAmount / tx.qty;
+      const revertAmount = unitPrice * actualRevertQty;
+
+      const newTransactions = state.transactions.map(t => {
+        if (t.id === id) {
+          return { ...t, qty: t.qty - actualRevertQty, totalAmount: t.totalAmount - revertAmount };
+        }
+        return t;
+      });
+
+      let newWaterLiters = state.inventory.currentWaterLiters;
+      let newEmptyGallons = state.inventory.emptyGallons;
+      let newFilledGallons = state.inventory.filledGallons;
+
+      if (tx.useStock) {
+        newFilledGallons += actualRevertQty;
+        if (tx.gallonStatus === 'tukar' || tx.gallonStatus === 'kembali') {
+          newEmptyGallons = Math.max(0, newEmptyGallons - actualRevertQty);
+        }
+      } else {
+        const litersRestored = actualRevertQty * 19;
+        newWaterLiters += litersRestored;
+        
+        if (tx.gallonStatus === 'pinjam' || tx.gallonStatus === 'baru') {
+          newEmptyGallons += actualRevertQty;
+        } else if (tx.gallonStatus === 'kembali') {
+          newWaterLiters = Math.max(0, newWaterLiters - litersRestored);
+          newEmptyGallons = Math.max(0, newEmptyGallons - actualRevertQty);
+        }
+      }
+
+      let updatedCustomers = [...state.customers];
+      if (tx.customerId) {
+        updatedCustomers = updatedCustomers.map(c => {
+          if (c.id === tx.customerId) {
+            let debtChange = tx.paymentMethod === 'bon' ? -revertAmount : 0;
+            let gallonChange = 0;
+            if (tx.gallonStatus === 'pinjam') gallonChange = -actualRevertQty;
+            if (tx.gallonStatus === 'kembali') gallonChange = actualRevertQty;
+            return {
+              ...c,
+              debtAmount: Math.max(0, c.debtAmount + debtChange),
+              borrowedGallons: Math.max(0, c.borrowedGallons + gallonChange),
+            };
+          }
+          return c;
+        });
+      }
+
+      return {
+        transactions: newTransactions,
+        inventory: { currentWaterLiters: newWaterLiters, emptyGallons: newEmptyGallons, filledGallons: newFilledGallons },
+        customers: updatedCustomers,
+      };
+    });
+
+    const state = get();
+    const tx = state.transactions.find(t => t.id === id);
+    if (tx) {
+      await supabase.from('transactions').update({ qty: tx.qty, total_amount: tx.totalAmount }).eq('id', id);
+    }
+    
+    await supabase.from('inventory').update({
+      current_water_liters: state.inventory.currentWaterLiters,
+      empty_gallons: state.inventory.emptyGallons,
+      filled_gallons: state.inventory.filledGallons
+    }).eq('id', 1);
+
+    const oldTx = state.transactions.find(t => t.id === id);
+    if (oldTx && oldTx.customerId) {
+      const cust = state.customers.find(c => c.id === oldTx.customerId);
+      if (cust) await supabase.from('customers').update({ 
+        debt_amount: cust.debtAmount, borrowed_gallons: cust.borrowedGallons 
+      }).eq('id', cust.id);
+    }
+  },
+
+  addWarehouseHistory: async (history) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(7);
+    const newHist = { ...history, id };
+
+    set((state) => {
+      let emptyChange = 0;
+      let filledChange = 0;
+      let waterChange = 0;
+
+      if (history.type === 'kosong') {
+        emptyChange = history.amountChange;
+      } else if (history.type === 'isi') {
+        filledChange = history.amountChange;
+        if (history.amountChange > 0 && !history.description.toLowerCase().includes('opname')) {
+          waterChange = -(history.amountChange * 19);
+          emptyChange = -history.amountChange;
+        }
+      }
+      
+      return {
+        warehouseHistories: [newHist, ...state.warehouseHistories],
+        inventory: {
+          ...state.inventory,
+          currentWaterLiters: Math.max(0, state.inventory.currentWaterLiters + waterChange),
+          emptyGallons: Math.max(0, state.inventory.emptyGallons + emptyChange),
+          filledGallons: Math.max(0, state.inventory.filledGallons + filledChange),
+        }
+      };
+    });
+
+    const state = get();
+    await supabase.from('warehouse_histories').insert({
+      id: newHist.id, date: newHist.date, type: newHist.type, 
+      amount_change: newHist.amountChange, description: newHist.description
+    });
+    await supabase.from('inventory').update({
+      current_water_liters: state.inventory.currentWaterLiters,
+      empty_gallons: state.inventory.emptyGallons,
+      filled_gallons: state.inventory.filledGallons
+    }).eq('id', 1);
+  },
+
+  addTankHistory: async (history) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(7);
+    const newHist = { ...history, id };
+
+    set((state) => ({
+      tankHistories: [newHist, ...state.tankHistories],
+      inventory: {
+        ...state.inventory,
+        currentWaterLiters: Math.min(state.settings.tankCapacity, state.inventory.currentWaterLiters + history.litersAdded)
+      }
+    }));
+
+    const state = get();
+    await supabase.from('tank_histories').insert({
+      id: newHist.id, date: newHist.date, liters_added: newHist.litersAdded, price_paid: newHist.pricePaid
+    });
+    await supabase.from('inventory').update({
+      current_water_liters: state.inventory.currentWaterLiters
+    }).eq('id', 1);
+  },
+
+  addExpense: async (expense) => {
+    const id = Date.now().toString() + Math.random().toString(36).substring(7);
+    const newExp = { ...expense, id };
+    
+    set((state) => ({
+      expenses: [newExp, ...state.expenses]
+    }));
+
+    await supabase.from('expenses').insert({
+      id: newExp.id, date: newExp.date, category: newExp.category, 
+      amount: newExp.amount, description: newExp.description
+    });
+  },
+
+  resetData: () => set(initialState),
+}));
