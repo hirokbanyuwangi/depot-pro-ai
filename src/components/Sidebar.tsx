@@ -31,6 +31,7 @@ export default function Sidebar() {
     { name: "Kalkulator HPP", href: "/admin/hpp", icon: Calculator },
     { name: "Biaya OPEX", href: "/admin/expenses", icon: Receipt },
     { name: "Pusat Input & Setup", href: "/admin/setup", icon: Settings },
+    { name: "Cetak Laporan", href: "/admin/report", icon: ScrollText },
   ];
 
   const staffLinks = [

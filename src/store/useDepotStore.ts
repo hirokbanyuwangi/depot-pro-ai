@@ -52,6 +52,9 @@ interface DepotState {
     capPrice: number;
     tissuePrice: number;
     sealPrice: number;
+    depotName: string;
+    depotAddress: string;
+    picName: string;
   };
   updateSettings: (newSettings: Partial<DepotState['settings']>) => void;
 
@@ -104,6 +107,9 @@ const initialState = {
     capPrice: 100,
     tissuePrice: 50,
     sealPrice: 50,
+    depotName: "DepotPro",
+    depotAddress: "Jl. Air Bersih No. 1",
+    picName: "Admin Utama",
   },
   inventory: {
     currentWaterLiters: 1000,

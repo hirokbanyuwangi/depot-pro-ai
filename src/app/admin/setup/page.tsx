@@ -18,6 +18,10 @@ export default function AdminSetup() {
   const [tankCapacity, setTankCapacity] = useState(5000);
   const [currentWater, setCurrentWater] = useState(0);
 
+  const [depotName, setDepotName] = useState("DepotPro");
+  const [depotAddress, setDepotAddress] = useState("");
+  const [picName, setPicName] = useState("");
+
   useEffect(() => {
     setPricePickup(settings.pricePickup ?? 6000);
     setPriceDelivery(settings.priceDelivery ?? 7000);
@@ -26,11 +30,14 @@ export default function AdminSetup() {
     setTotalGallonAsset(settings.totalGallonAsset ?? 100);
     setTankCapacity(settings.tankCapacity ?? 5000);
     setCurrentWater(inventory?.currentWaterLiters ?? 0);
+    setDepotName(settings.depotName ?? "DepotPro");
+    setDepotAddress(settings.depotAddress ?? "");
+    setPicName(settings.picName ?? "");
   }, [settings, inventory]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    updateSettings({ pricePickup, priceDelivery, priceStore, storeCommission, totalGallonAsset, tankCapacity });
+    updateSettings({ pricePickup, priceDelivery, priceStore, storeCommission, totalGallonAsset, tankCapacity, depotName, depotAddress, picName });
     updateInventory(currentWater);
     alert("Pengaturan berhasil disimpan!");
   };
@@ -158,6 +165,24 @@ export default function AdminSetup() {
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-widest">Sisa Air Toren (L)</label>
                     <input type="number" value={currentWater} onChange={e => setCurrentWater(Number(e.target.value))} required className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-5 md:col-span-2">
+                <h3 className="font-medium text-lg text-slate-800 border-b border-slate-100 pb-3">Profil & Laporan</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-widest">Nama Depot</label>
+                    <input type="text" value={depotName} onChange={e => setDepotName(e.target.value)} required placeholder="Misal: Depot Air Berkah" className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-widest">Alamat Lengkap</label>
+                    <input type="text" value={depotAddress} onChange={e => setDepotAddress(e.target.value)} required placeholder="Misal: Jl. Mawar No. 12" className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-widest">Penanggung Jawab</label>
+                    <input type="text" value={picName} onChange={e => setPicName(e.target.value)} required placeholder="Misal: Budi Santoso" className="w-full p-3.5 rounded-xl border border-slate-200 bg-white text-slate-900 focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none transition" />
                   </div>
                 </div>
               </div>
