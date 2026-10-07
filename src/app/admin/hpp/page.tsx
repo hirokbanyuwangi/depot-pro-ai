@@ -16,12 +16,12 @@ export default function AdminHPP() {
 
   // Sync state after hydration to avoid "reset on refresh" bug
   useEffect(() => {
-    setTankCapacity(settings.tankCapacity || 5000);
-    setTankPrice(settings.tankPrice || 350000);
-    setCapPrice(settings.capPrice || 100);
-    setTissuePrice(settings.tissuePrice || 50);
-    setSealPrice(settings.sealPrice || 50);
-    setInvestorPct(settings.investorPct || 50);
+    setTankCapacity(settings.tankCapacity ?? 5000);
+    setTankPrice(settings.tankPrice ?? 350000);
+    setCapPrice(settings.capPrice ?? 100);
+    setTissuePrice(settings.tissuePrice ?? 50);
+    setSealPrice(settings.sealPrice ?? 50);
+    setInvestorPct(settings.investorPct ?? 50);
   }, [settings]);
 
   const handleSave = (e: React.FormEvent) => {

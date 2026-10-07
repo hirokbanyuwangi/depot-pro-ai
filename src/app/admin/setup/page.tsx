@@ -19,13 +19,13 @@ export default function AdminSetup() {
   const [currentWater, setCurrentWater] = useState(0);
 
   useEffect(() => {
-    setPricePickup(settings.pricePickup || 6000);
-    setPriceDelivery(settings.priceDelivery || 7000);
-    setPriceStore(settings.priceStore || 5000);
-    setStoreCommission(settings.storeCommission || 1000);
-    setTotalGallonAsset(settings.totalGallonAsset || 100);
-    setTankCapacity(settings.tankCapacity || 5000);
-    setCurrentWater(inventory?.currentWaterLiters || 0);
+    setPricePickup(settings.pricePickup ?? 6000);
+    setPriceDelivery(settings.priceDelivery ?? 7000);
+    setPriceStore(settings.priceStore ?? 5000);
+    setStoreCommission(settings.storeCommission ?? 1000);
+    setTotalGallonAsset(settings.totalGallonAsset ?? 100);
+    setTankCapacity(settings.tankCapacity ?? 5000);
+    setCurrentWater(inventory?.currentWaterLiters ?? 0);
   }, [settings, inventory]);
 
   const handleSave = (e: React.FormEvent) => {
