@@ -106,16 +106,16 @@ export default function AdminDashboard() {
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <p className="text-sm font-bold text-slate-500 dark:text-[#a8acb3] uppercase tracking-widest mb-1">ENTERPRISE MONITORING</p>
-          <h1 className="text-4xl font-normal text-slate-900 dark:text-white tracking-tight">System Overview</h1>
+          <p className="text-sm font-bold text-slate-500  uppercase tracking-widest mb-1">ENTERPRISE MONITORING</p>
+          <h1 className="text-4xl font-normal text-slate-900  tracking-tight">System Overview</h1>
         </div>
         
-        <div className="flex items-center gap-2 bg-white dark:bg-[#16181c] px-4 py-2 rounded-full border border-slate-200 dark:border-[#2b2d31] shadow-sm">
+        <div className="flex items-center gap-2 bg-white  px-4 py-2 rounded-full border border-slate-200  shadow-sm">
           <Filter className="w-4 h-4 text-slate-400" />
           <select 
             value={filter} 
             onChange={(e) => setFilter(e.target.value as any)}
-            className="bg-transparent text-sm font-medium text-slate-700 dark:text-slate-300 focus:outline-none cursor-pointer"
+            className="bg-transparent text-sm font-medium text-slate-700  focus:outline-none cursor-pointer"
           >
             <option value="hari_ini">Hari Ini</option>
             <option value="7_hari">7 Hari Terakhir</option>
@@ -127,22 +127,22 @@ export default function AdminDashboard() {
       
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-[#16181c] p-6 rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden group">
-          <p className="text-xs font-bold text-slate-500 dark:text-[#a8acb3] uppercase tracking-widest mb-3 flex justify-between">
+        <div className="bg-white  p-6 rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden group">
+          <p className="text-xs font-bold text-slate-500  uppercase tracking-widest mb-3 flex justify-between">
             Omzet Masuk <DollarSign className="w-4 h-4 text-slate-400" />
           </p>
-          <p className="text-3xl font-mono font-medium text-slate-900 dark:text-white mt-1">Rp {omzetTotal.toLocaleString('id-ID')}</p>
+          <p className="text-3xl font-mono font-medium text-slate-900  mt-1">Rp {omzetTotal.toLocaleString('id-ID')}</p>
         </div>
         
-        <div className="bg-white dark:bg-[#16181c] p-6 rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-500 dark:text-[#a8acb3] uppercase tracking-widest mb-3 flex justify-between">
+        <div className="bg-white  p-6 rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
+          <p className="text-xs font-bold text-slate-500  uppercase tracking-widest mb-3 flex justify-between">
             Laba Bersih <TrendingUp className="w-4 h-4 text-slate-400" />
           </p>
           <p className="text-3xl font-mono font-medium text-emerald-600 mt-1">Rp {labaBersihFilter.toLocaleString('id-ID')}</p>
         </div>
         
-        <div className="bg-white dark:bg-[#16181c] p-6 rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-500 dark:text-[#a8acb3] uppercase tracking-widest mb-3 flex justify-between">
+        <div className="bg-white  p-6 rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
+          <p className="text-xs font-bold text-slate-500  uppercase tracking-widest mb-3 flex justify-between">
             Galon Terjual <Package className="w-4 h-4 text-slate-400" />
           </p>
           <p className="text-3xl font-mono font-medium text-brand-600 mt-1">{galonTerjual}</p>
@@ -151,24 +151,24 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-[#16181c] p-6 rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
-          <p className="text-xs font-bold text-slate-500 dark:text-[#a8acb3] uppercase tracking-widest mb-3 flex justify-between">
+        <div className="bg-white  p-6 rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] relative overflow-hidden">
+          <p className="text-xs font-bold text-slate-500  uppercase tracking-widest mb-3 flex justify-between">
             Sisa Air Toren <Droplets className="w-4 h-4 text-slate-400" />
           </p>
-          <p className="text-3xl font-mono font-medium text-slate-900 dark:text-white mt-1">{inventory.currentWaterLiters.toLocaleString('id-ID')} L</p>
+          <p className="text-3xl font-mono font-medium text-slate-900  mt-1">{inventory.currentWaterLiters.toLocaleString('id-ID')} L</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Chart */}
-        <div className="bg-white dark:bg-[#16181c] rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] p-8 lg:col-span-2">
+        <div className="bg-white  rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] p-8 lg:col-span-2">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="font-normal text-slate-900 dark:text-white text-2xl tracking-tight">Sales Performance Over Time</h3>
-              <p className="text-sm text-slate-500 dark:text-[#a8acb3] mt-1">Omzet harian selama 7 hari terakhir</p>
+              <h3 className="font-normal text-slate-900  text-2xl tracking-tight">Sales Performance Over Time</h3>
+              <p className="text-sm text-slate-500  mt-1">Omzet harian selama 7 hari terakhir</p>
             </div>
             <div className="flex gap-4 text-xs font-bold tracking-widest">
-              <span className="flex items-center gap-2 text-slate-500 dark:text-[#a8acb3] uppercase">
+              <span className="flex items-center gap-2 text-slate-500  uppercase">
                 <div className="w-2 h-2 rounded-full bg-brand-500"></div> OMZET
               </span>
             </div>
@@ -196,24 +196,24 @@ export default function AdminDashboard() {
         </div>
 
         {/* Top Assets/Customers */}
-        <div className="bg-white dark:bg-[#16181c] rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] p-8">
-          <h3 className="font-normal text-slate-900 dark:text-white text-2xl tracking-tight mb-8">Top Customers</h3>
+        <div className="bg-white  rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] p-8">
+          <h3 className="font-normal text-slate-900  text-2xl tracking-tight mb-8">Top Customers</h3>
           <div className="space-y-6">
             {topCustomers.length > 0 ? topCustomers.map(([name, qty], idx) => (
               <div key={idx}>
                 <div className="flex justify-between text-sm mb-3">
-                  <span className="font-medium text-slate-800 dark:text-slate-200">{name}</span>
-                  <span className="font-mono text-slate-500 dark:text-[#a8acb3] font-medium">{qty} Galon</span>
+                  <span className="font-medium text-slate-800 ">{name}</span>
+                  <span className="font-mono text-slate-500  font-medium">{qty} Galon</span>
                 </div>
                 <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
                   <div className="bg-brand-500 h-full" style={{ width: `${Math.min(100, (qty / 20) * 100)}%` }}></div>
                 </div>
               </div>
             )) : (
-              <p className="text-sm text-slate-500 dark:text-[#a8acb3]">Belum ada data pelanggan.</p>
+              <p className="text-sm text-slate-500 ">Belum ada data pelanggan.</p>
             )}
             <div className="pt-6 text-center">
-              <button className="text-xs font-bold text-slate-500 dark:text-[#a8acb3] hover:text-brand-600 uppercase tracking-widest transition">
+              <button className="text-xs font-bold text-slate-500  hover:text-brand-600 uppercase tracking-widest transition">
                 View All Customers
               </button>
             </div>
@@ -222,9 +222,9 @@ export default function AdminDashboard() {
       </div>
 
       {/* Riwayat Aktivitas Detail */}
-      <div className="bg-white dark:bg-[#16181c] rounded-3xl border border-slate-200 dark:border-[#2b2d31] shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden">
-        <div className="p-8 border-b border-slate-100 dark:border-[#2b2d31] flex justify-between items-center">
-          <h3 className="font-normal text-slate-900 dark:text-white text-2xl tracking-tight">Recent Power Events</h3>
+      <div className="bg-white  rounded-3xl border border-slate-200  shadow-[0_4px_12px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div className="p-8 border-b border-slate-100  flex justify-between items-center">
+          <h3 className="font-normal text-slate-900  text-2xl tracking-tight">Recent Power Events</h3>
           <div className="flex items-center gap-2 bg-emerald-50 px-3 py-1.5 rounded-full">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
             <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">Live Feed Active</span>
@@ -232,7 +232,7 @@ export default function AdminDashboard() {
         </div>
         <div className="overflow-x-auto max-h-[500px]">
           <table className="w-full text-left text-sm relative">
-            <thead className="bg-slate-50 dark:bg-[#0a0b0d] text-slate-500 dark:text-[#a8acb3] border-b border-slate-100 dark:border-[#2b2d31] sticky top-0 z-10">
+            <thead className="bg-slate-50  text-slate-500  border-b border-slate-100  sticky top-0 z-10">
               <tr>
                 <th className="p-6 font-bold text-xs uppercase tracking-widest">Timestamp</th>
                 <th className="p-6 font-bold text-xs uppercase tracking-widest">Activity Type</th>
@@ -243,14 +243,14 @@ export default function AdminDashboard() {
             </thead>
             <tbody className="divide-y divide-slate-100">
               {history.length > 0 ? history.map((item) => (
-                <tr key={item.id} className="hover:bg-slate-50 dark:bg-[#0a0b0d] transition-colors">
-                  <td className="p-6 text-slate-500 dark:text-[#a8acb3] font-mono text-xs">
+                <tr key={item.id} className="hover:bg-slate-50  transition-colors">
+                  <td className="p-6 text-slate-500  font-mono text-xs">
                     {item.date} {item.time !== "00:00" ? item.time : ""}
                   </td>
                   <td className="p-6">
-                    <span className="font-medium text-slate-900 dark:text-white">{item.title}</span>
+                    <span className="font-medium text-slate-900 ">{item.title}</span>
                   </td>
-                  <td className="p-6 text-slate-500 dark:text-[#a8acb3] text-sm">{item.desc}</td>
+                  <td className="p-6 text-slate-500  text-sm">{item.desc}</td>
                   <td className="p-6">
                     {item.type === "IN" ? (
                       <span className="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-full">ROUTINE</span>
@@ -264,7 +264,7 @@ export default function AdminDashboard() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-slate-500 dark:text-[#a8acb3]">
+                  <td colSpan={5} className="p-12 text-center text-slate-500 ">
                     <p>No recent events.</p>
                   </td>
                 </tr>
