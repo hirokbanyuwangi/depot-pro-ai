@@ -32,9 +32,9 @@ export default function RootLayout({
     <html
       lang="id"
       suppressHydrationWarning
-      className={`${fontSans.variable} ${fontMono.variable} h-full antialiased`}
+      className={`${fontSans.variable} ${fontMono.variable} h-full print:h-auto antialiased`}
     >
-      <body className="min-h-full flex flex-col font-sans bg-slate-50 text-slate-900 selection:bg-brand-600 selection:text-white">
+      <body className="min-h-full print:min-h-0 flex flex-col font-sans bg-slate-50 text-slate-900 selection:bg-brand-600 selection:text-white print:block print:h-auto">
         {children}
       </body>
     </html>

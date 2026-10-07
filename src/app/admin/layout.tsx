@@ -22,11 +22,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   if (!mounted || !user || user.role !== "admin") return null;
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 print:bg-white">
+    <div className="flex flex-col md:flex-row min-h-screen bg-slate-50 print:block print:min-h-0 print:bg-white print:h-auto">
       <div className="print:hidden">
         <Sidebar />
       </div>
-      <main className="flex-1 overflow-y-auto print:overflow-visible">
+      <main className="flex-1 overflow-y-auto print:overflow-visible print:block print:h-auto">
         <div className="max-w-6xl mx-auto w-full p-4 md:p-8 print:p-0">
           {children}
         </div>

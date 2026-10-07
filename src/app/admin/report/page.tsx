@@ -20,6 +20,16 @@ export default function AdminReport() {
     setMounted(true);
   }, []);
 
+  const handlePresetMonth = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (!val) return;
+    const [year, month] = val.split('-');
+    const firstDay = new Date(parseInt(year), parseInt(month) - 1, 1).toISOString().split('T')[0];
+    const lastDay = new Date(parseInt(year), parseInt(month), 0).toISOString().split('T')[0];
+    setStartDate(firstDay);
+    setEndDate(lastDay);
+  };
+
   const filteredData = useMemo(() => {
     const sDate = new Date(startDate);
     sDate.setHours(0, 0, 0, 0);
@@ -90,7 +100,21 @@ export default function AdminReport() {
               <Download className="w-6 h-6 text-brand-500" />
               Eksport Laporan Keuangan
             </h1>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Pilih Cepat Bulan</label>
+                <select onChange={handlePresetMonth} defaultValue="" className="p-2.5 rounded-xl border border-slate-200 bg-white text-slate-900 text-sm focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none">
+                  <option value="" disabled>-- Pilih Bulan --</option>
+                  {Array.from({length: 12}).map((_, i) => {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    const val = `${d.getFullYear()}-${d.getMonth() + 1}`;
+                    const label = d.toLocaleString('id-ID', { month: 'long', year: 'numeric' });
+                    return <option key={val} value={val}>{label}</option>;
+                  })}
+                </select>
+              </div>
+              <div className="w-px h-10 bg-slate-200 mx-2 hidden md:block"></div>
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Mulai Tanggal</label>
                 <input 
@@ -100,7 +124,7 @@ export default function AdminReport() {
                   className="p-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-900 text-sm focus:ring-1 focus:ring-brand-500 focus:border-brand-500 outline-none"
                 />
               </div>
-              <span className="text-slate-400 mt-5">-</span>
+              <span className="text-slate-400 mt-5 hidden sm:block">-</span>
               <div>
                 <label className="block text-xs font-bold text-slate-500 mb-1 uppercase">Sampai Tanggal</label>
                 <input 
