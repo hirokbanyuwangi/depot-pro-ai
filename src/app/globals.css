@@ -1,26 +1,90 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Coinbase Blue Accent */
+  --color-brand-50: #e5edff;
+  --color-brand-100: #cce0ff;
+  --color-brand-200: #99c2ff;
+  --color-brand-500: #0052ff;
+  --color-brand-600: #0052ff;
+  --color-brand-700: #003ecc;
+  --color-brand-800: #002e99;
+  --color-brand-900: #001f66;
+
+  --color-rose-50: var(--bg-down-soft);
+  --color-rose-500: var(--semantic-down);
+  --color-rose-600: var(--semantic-down);
+
+  --color-emerald-50: var(--bg-up-soft);
+  --color-emerald-500: var(--semantic-up);
+  --color-emerald-600: var(--semantic-up);
+
+  --color-sky-50: var(--bg-main);
+  --color-sky-200: var(--border-subtle);
+  --color-sky-400: var(--color-brand-500);
+  --color-sky-500: var(--color-brand-500);
+  --color-sky-600: var(--color-brand-600);
+  --color-sky-700: var(--color-brand-700);
+  --color-sky-800: var(--color-brand-800);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+
+  /* Coinbase Global Overrides */
+  --radius-xl: 12px;
+  --radius-2xl: 24px;
+  --radius-3xl: 24px;
+  --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.04);
 }
 
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-main: #f7f7f7;
+    --bg-card: #ffffff;
+    --text-ink: #0a0b0d;
+    --text-body: #5b616e;
+    --text-muted: #7c828a;
+    --border-subtle: #dee1e6;
+    --border-strong: #eef0f3;
+    
+    --semantic-down: #cf202f;
+    --bg-down-soft: #fef2f2;
+    --semantic-up: #05b169;
+    --bg-up-soft: #f0fdf4;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printableReceipt, #printableReceipt * {
+    visibility: visible;
+  }
+  #printableReceipt {
+    position: fixed;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
 }
