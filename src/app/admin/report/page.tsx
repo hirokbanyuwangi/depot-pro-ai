@@ -146,7 +146,7 @@ export default function AdminReport() {
       </div>
 
       {/* Printable Report Page */}
-      <div className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm print:shadow-none print:border-none print:p-0 print:m-0 w-full max-w-[210mm] mx-auto min-h-[297mm]">
+      <div id="printableReport" className="bg-white p-8 sm:p-12 rounded-3xl border border-slate-200 shadow-sm print:shadow-none print:border-none print:p-0 print:m-0 w-full max-w-[210mm] mx-auto min-h-[297mm]">
         
         {/* Header Kop Surat */}
         <div className="border-b-2 border-slate-900 pb-6 mb-8 flex items-center gap-6">
