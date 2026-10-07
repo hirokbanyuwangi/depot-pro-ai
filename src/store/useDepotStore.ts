@@ -488,5 +488,26 @@ export const useDepotStore = create<DepotState>()((set, get) => ({
     });
   },
 
-  resetData: () => set(initialState),
+  resetData: async () => {
+    set({
+      inventory: { currentWaterLiters: 1000, emptyGallons: 50, filledGallons: 20 },
+      customers: [], transactions: [], warehouseHistories: [], tankHistories: [], expenses: []
+    });
+    
+    // Clear all data from Supabase except settings
+    await Promise.all([
+      supabase.from('transactions').delete().neq('id', '0'),
+      supabase.from('customers').delete().neq('id', '0'),
+      supabase.from('warehouse_histories').delete().neq('id', '0'),
+      supabase.from('tank_histories').delete().neq('id', '0'),
+      supabase.from('expenses').delete().neq('id', '0'),
+    ]);
+    
+    // Reset inventory to default
+    await supabase.from('inventory').update({
+      current_water_liters: 1000,
+      empty_gallons: 50,
+      filled_gallons: 20
+    }).eq('id', 1);
+  },
 }));

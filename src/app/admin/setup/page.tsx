@@ -42,12 +42,12 @@ export default function AdminSetup() {
     alert("Pengaturan berhasil disimpan!");
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     const pass = prompt("AWAS ZONA BAHAYA!\nMasukkan password Admin untuk menghapus SEMUA data:");
     const adminPass = process.env.NEXT_PUBLIC_ADMIN_PASS || "admin123";
     
     if (pass === adminPass) {
-      resetData();
+      await resetData();
       alert("Semua data berhasil di-reset menjadi kosong.");
       window.location.reload();
     } else if (pass !== null) {
@@ -55,9 +55,9 @@ export default function AdminSetup() {
     }
   };
 
-  const handleLoadDemo = () => {
+  const handleLoadDemo = async () => {
     if (confirm("Data saat ini akan direset lalu diisi data demo. Lanjutkan?")) {
-      resetData();
+      await resetData();
       
       // Inject Demo Data
       updateSettings({ pricePickup: 6000, priceDelivery: 7000, priceStore: 5000, storeCommission: 1000, tankCapacity: 5000 });
@@ -74,40 +74,43 @@ export default function AdminSetup() {
         return d.toISOString().split('T')[0];
       }).reverse();
       
+      const demoPromises: Promise<void>[] = [];
       dates.forEach((date, i) => {
         // Transactions
-        addTransaction({
+        demoPromises.push(addTransaction({
           date, time: "09:30", channel: "pickup", qty: 3 + (i%5), customerId: null,
           customerName: "Pelanggan Umum", gallonStatus: "tukar", paymentMethod: "cash",
           totalAmount: (3 + (i%5)) * 6000
-        });
-        addTransaction({
+        }));
+        demoPromises.push(addTransaction({
           date, time: "11:00", channel: "delivery", qty: 2 + (i%3), customerId: "1",
           customerName: "Warung Barokah", gallonStatus: "tukar", paymentMethod: "cash",
           totalAmount: (2 + (i%3)) * 7000
-        });
+        }));
         if (i % 2 === 0) {
-          addTransaction({
+          demoPromises.push(addTransaction({
             date, time: "14:00", channel: "store", qty: 10, customerId: "3",
             customerName: "Toko Sinar Jaya", gallonStatus: "tukar", paymentMethod: "bon",
             totalAmount: 10 * 5000 // harga titip toko
-          });
+          }));
         }
         
         // Expense every 3 days
         if (i % 3 === 0) {
-          addExpense({ date, category: "Bensin / Kendaraan", amount: 20000, description: "Bensin Motor" });
+          demoPromises.push(addExpense({ date, category: "Bensin / Kendaraan", amount: 20000, description: "Bensin Motor" }));
         }
         
         // Listrik every 30 days
         if (i === 0) {
-          addExpense({ date, category: "Listrik", amount: 150000, description: "Token Listrik" });
+          demoPromises.push(addExpense({ date, category: "Listrik", amount: 150000, description: "Token Listrik" }));
         }
       });
       
       // Specific expenses for today
       const today = dates[dates.length - 1];
-      addTankHistory({ date: today, litersAdded: 5000, pricePaid: 350000 });
+      demoPromises.push(addTankHistory({ date: today, litersAdded: 5000, pricePaid: 350000 }));
+      
+      await Promise.all(demoPromises);
       
       alert("Data Demo berhasil dimuat!");
       window.location.reload();
